@@ -1,3 +1,95 @@
+# import cv2 as cv
+# import numpy as np
+# import time
+
+# def draw_text_lines(img, lines, start_y=30, line_height=30):
+#     """
+#     Draw multiple lines of text on an image.
+#     lines: list of (text, color) tuples
+#     """
+#     for i, (txt, col) in enumerate(lines):
+#         y = start_y + i * line_height
+#         cv.putText(img, txt, (10, y),
+#                    cv.FONT_HERSHEY_SIMPLEX, 0.7, col, 2)
+#     return img
+
+
+# # --- Configuration ---
+# CHESSBOARD_SIZE = (9, 6)   # Number of inner corners
+# SQUARE_SIZE_MM = 25        # Real-world square size
+# TARGET_IMAGES = 20         # Number of snapshots to collect
+
+# # --- State ---
+# criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+# objp = np.zeros((CHESSBOARD_SIZE[0]*CHESSBOARD_SIZE[1], 3), np.float32)
+# objp[:, :2] = np.mgrid[0:CHESSBOARD_SIZE[0], 0:CHESSBOARD_SIZE[1]].T.reshape(-1, 2)
+# objp = objp * SQUARE_SIZE_MM
+
+# objpoints = []   # 3D points
+# imgpoints = []   # 2D points
+# images_captured = 0
+# last_capture_time = time.time()
+# calibrated = False
+# mtx, dist = None, None
+
+
+# def run_calibration(frame):
+#     """Process a single frame for calibration mode."""
+#     global images_captured, last_capture_time, calibrated, mtx, dist
+
+#     show = frame.copy()
+#     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+
+#     if not calibrated:
+#         ret, corners = cv.findChessboardCorners(gray, CHESSBOARD_SIZE, None)
+
+#         if ret:
+#             cv.drawChessboardCorners(show, CHESSBOARD_SIZE, corners, ret)
+
+#             # Capture at most every 2 sec
+#             if time.time() - last_capture_time > 2 and images_captured < TARGET_IMAGES:
+#                 corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+#                 objpoints.append(objp)
+#                 imgpoints.append(corners2)
+
+#                 images_captured += 1
+#                 last_capture_time = time.time()
+#                 print(f"📸 Captured calibration image {images_captured}/{TARGET_IMAGES}")
+
+#         # Status text
+#         lines = [
+#                 ("Calibration mode", (0,255,255)),
+#                 (f"Captured {images_captured}/{TARGET_IMAGES} frames", (0,255,0)),
+#                 ("Show chessboard pattern to the camera", (0,255,0)),
+#                 ("Press SPACE to capture, ESC to quit", (255,0,0))
+#                 ]
+#         show = draw_text_lines(frame, lines, start_y=90, line_height=30)
+
+#         # Once enough snapshots, calibrate
+#         if images_captured >= TARGET_IMAGES:
+#             print("⚙️ Running final calibration...")
+#             ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(
+#                 objpoints, imgpoints, gray.shape[::-1], None, None)
+
+#             if ret:
+#                 np.savez("calibration.npz", mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)
+#                 print("✅ Calibration complete, saved to calibration.npz")
+#                 calibrated = True
+#                 show = draw_text_lines(show, [
+#                     ("Calibration Complete ✅", (0,255,0))
+#                 ], start_y=220, line_height=30)
+
+#     else:
+#         # Already calibrated: just show status
+#         lines = [
+#             ("Calibration mode", (0,255,255)),
+#             ("Calibration Complete ✅", (0,255,0))
+#         ]
+#         show = draw_text_lines(show, lines, start_y=90, line_height=30)
+
+#     return show
+
+
 import cv2 as cv
 import numpy as np
 import time

@@ -297,6 +297,21 @@ import time
 ##App_version_0.2
 import cv2 as cv
 import time
+import numpy as np
+
+def draw_text_lines(img, lines, start_y=30, line_height=30):
+    """
+    Draw multiple lines of text on an image.
+    lines: list of (text, color) tuples
+    start_y: Y position of first line
+    line_height: spacing between lines
+    """
+    for i, (txt, col) in enumerate(lines):
+        y = start_y + i * line_height
+        cv.putText(img, txt, (10, y),
+                   cv.FONT_HERSHEY_SIMPLEX, 0.7, col, 2)
+    return img
+
 
 # Mode names – each one will connect to a module in cvcore/
 MODES = [
@@ -328,6 +343,11 @@ def setup_trackbars(mode, window):
         cv.createTrackbar("Vmin", window, 0, 255, nothing)
         cv.createTrackbar("Vmax", window, 255, 255, nothing)
 
+    elif mode == "exposure":
+        cv.createTrackbar("Brightness", window, 50, 100, nothing)  # 0–100, default 50
+        cv.createTrackbar("Contrast", window, 50, 100, nothing)    # 0–100, default 50
+
+
     elif mode == "gaussian":
         cv.createTrackbar("Kernel", window, 5, 30, nothing)   # odd numbers work best
         cv.createTrackbar("Sigma", window, 1, 50, nothing)
@@ -351,6 +371,24 @@ def setup_trackbars(mode, window):
         cv.createTrackbar("Ty", window, 100, 200, nothing)
         cv.createTrackbar("Angle", window, 180, 360, nothing) # -180..+180
         cv.createTrackbar("Scale", window, 100, 200, nothing) # 100%..200%
+
+    # elif mode == "panorama":
+    #     # overlap %, use_cyl(0/1), ratio*100, ransac px, bands
+    #     cv.createTrackbar("Overlap%", window, 30, 60, nothing)
+    #     cv.createTrackbar("CylWarp",  window, 1, 1, nothing)
+    #     cv.createTrackbar("Ratiox100", window, 75, 95, nothing)
+    #     cv.createTrackbar("RANSACpx", window, 4, 10, nothing)
+    #     cv.createTrackbar("Bands", window, 5, 8, nothing)
+
+
+    elif mode == "ar":
+        cv.createTrackbar("Scale", window, 100, 200, nothing) 
+        cv.createTrackbar("RotX", window, 0, 360, nothing)
+        cv.createTrackbar("RotY", window, 0, 360, nothing)
+        cv.createTrackbar("RotZ", window, 0, 360, nothing)
+
+
+        
 
 def main():
     global mode_idx, last_mode
@@ -490,8 +528,19 @@ def main():
         #     show = result
 
         elif mode == "exposure":
-            import cvcore.exposure as exposure
-            show = exposure.adjust_bc(frame)
+
+            # Trackbar values
+            b_val = cv.getTrackbarPos("Brightness", window) - 50  # range -50..+50
+            c_val = cv.getTrackbarPos("Contrast", window) - 50    # range -50..+50
+
+            # Apply adjustment
+            frame_float = frame.astype(np.float32)
+            alpha = 1.0 + (c_val / 50.0)   # contrast factor
+            beta = b_val * 2               # brightness offset
+            show = cv.convertScaleAbs(frame_float, alpha=alpha, beta=beta)
+
+            # import cvcore.exposure as exposure
+            # show = exposure.adjust_bc(frame)
 
         elif mode == "hist":
             import cvcore.histogram as histogram
@@ -534,7 +583,16 @@ def main():
 
         elif mode == "panorama":
             import cvcore.panorama as panorama
+            # # read UI params
+            # ov  = cv.getTrackbarPos("Overlap%", window)
+            # cyl = cv.getTrackbarPos("CylWarp", window)
+            # rat = cv.getTrackbarPos("Ratiox100", window)
+            # ran = cv.getTrackbarPos("RANSACpx", window)
+            # bnd = cv.getTrackbarPos("Bands", window)
+            # panorama.set_params(ov, cyl, rat, ran, bnd)
+
             show = panorama.stitch(frame)
+
 
         elif mode == "calib":
             import cvcore.calib as calib
@@ -548,8 +606,13 @@ def main():
             show = frame
         # ---------- End of modes ----------
 
-        cv.putText(show, f"Mode: {mode}   n=next, p=prev, s=save, ESC=quit",
-                   (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+        # cv.putText(show, f"Mode: {mode}   n=next, p=prev, s=save, ESC=quit",
+        #            (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+        show = draw_text_lines(show, [
+            (f"Mode: {mode}", (0,255,0)),
+            ("n=next | p=prev | s=save | ESC=quit", (0,255,255))
+        ], start_y=30, line_height=30)
+
         cv.imshow(window, show)
 
         key = cv.waitKey(30) & 0xFF
