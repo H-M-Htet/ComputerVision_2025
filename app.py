@@ -397,7 +397,7 @@ def main():
         print("❌ Cannot open webcam")
         return
 
-    window = "CV Playground"
+    window = "CV_Assignment1"
     cv.namedWindow(window, cv.WINDOW_NORMAL)
 
     last_key = None
