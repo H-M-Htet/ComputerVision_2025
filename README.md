@@ -36,6 +36,15 @@ from filters and edge detection to panorama stitching, camera calibration, and A
 - OpenCV (with contrib modules)  
 - NumPy  
 
+🚀 Quick Start (For New Users)
+Install Python 3.9+
+On Mac: check with python3 --version
+On Windows: download from python.org
+Install required packages in a terminal (Mac/Linux) or Command Prompt (Windows):
+pip install opencv-contrib-python numpy
+Run the app in your terminal:
+python app.py
+A webcam window will appear — now you can explore different modes!
 Install with:
 
 ```bash
