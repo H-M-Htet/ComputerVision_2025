@@ -1,4 +1,4 @@
-# CV Playground Application
+# CV Assignment Application
 
 This is an **interactive computer vision test app** built with **Python + OpenCV**.  
 It connects to your webcam and lets you try out different vision techniques in real time —  
